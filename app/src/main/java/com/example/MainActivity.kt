@@ -1255,17 +1255,6 @@ fun InboxTab(viewModel: VoltxViewModel) {
 fun ActiveNumberCard(number: ActiveNumber, viewModel: VoltxViewModel, context: Context) {
     val isOtpReceived = !number.otp.isNullOrBlank()
 
-    // Pulse animation helper for active numbers
-    val infiniteTransition = rememberInfiniteTransition()
-    val alphaAnim by infiniteTransition.animateFloat(
-        initialValue = 0.4f,
-        targetValue = 1.0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        )
-    )
-
     val artisticCardShape = RoundedCornerShape(topStart = 24.dp, bottomEnd = 24.dp, topEnd = 6.dp, bottomStart = 6.dp)
     Card(
         modifier = Modifier
@@ -1424,8 +1413,7 @@ fun ActiveNumberCard(number: ActiveNumber, viewModel: VoltxViewModel, context: C
             } else {
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .alpha(alphaAnim),
+                        .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     CircularProgressIndicator(
@@ -2110,7 +2098,286 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
             }
         }
 
-        // Active FB SMS OTP/Verification section (Show OTP right here!)
+        // 1. Account Password Settings & Primary Creation Controller (Sobar Upore!)
+        item {
+            val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = asymmetricCardShape,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.5.dp, RoseGold.copy(alpha = 0.3f))
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Account Password & Creation",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = RoseGold
+                    )
+
+                    // Password Input field
+                    OutlinedTextField(
+                        value = passwordInput,
+                        onValueChange = { passwordInput = it },
+                        label = { Text("Registration Password") },
+                        placeholder = { Text("Enter account password") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("fb_password_input"),
+                        singleLine = true,
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Key,
+                                contentDescription = "Password",
+                                tint = RoseGold.copy(alpha = 0.8f),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = RoseGold,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                        ),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Button(
+                            onClick = {
+                                if (passwordInput.length >= 6) {
+                                    savedPassword = passwordInput
+                                    android.widget.Toast.makeText(context, "Password saved successfully!", android.widget.Toast.LENGTH_SHORT).show()
+                                } else {
+                                    android.widget.Toast.makeText(context, "Password must be at least 6 characters", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = RoseGold),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1.2f)
+                        ) {
+                            Text("Save Password", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        if (savedPassword.isNotEmpty()) {
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFF2E7D32).copy(alpha = 0.15f)),
+                                border = BorderStroke(1.dp, Color(0xFF2E7D32)),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = "Saved",
+                                        tint = Color(0xFF2E7D32),
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Text(
+                                        text = "Saved: $savedPassword",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF2E7D32),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Text(
+                        text = "ℹ️ Note: Phone numbers will be automatically obtained from live Facebook ranges below. Anyone cannot manually input a number.",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                        thickness = 1.dp,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+
+                    // Sobar Upore master Create Button!
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (selectedFbRange != null) "Selected Range: $selectedFbRange" else "Selected Range: None",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                color = if (selectedFbRange != null) RoseGold else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                            Text(
+                                text = if (selectedFbRange == null) "Select a range from grid below"
+                                       else if (savedPassword.isNotEmpty()) "Ready to register!"
+                                       else "⚠️ Click Save Password first",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = if (selectedFbRange == null) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                       else if (savedPassword.isNotEmpty()) Color(0xFF2E7D32)
+                                       else Color.Red
+                            )
+                        }
+
+                        Button(
+                            onClick = {
+                                if (systemStatus == "ON" && selectedFbRange != null && savedPassword.isNotEmpty()) {
+                                    viewModel.buyAndCreateFacebookAccount(selectedFbRange!!, savedPassword)
+                                }
+                            },
+                            enabled = systemStatus == "ON" &&
+                                      selectedFbRange != null &&
+                                      savedPassword.isNotEmpty() &&
+                                      (creationState !is FbCreationState.Purchasing && creationState !is FbCreationState.Registering),
+                            colors = ButtonDefaults.buttonColors(containerColor = RoseGold),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text(
+                                text = "CREATE ACCOUNT",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Action Status Banner (if any)
+        if (creationState !is FbCreationState.Idle) {
+            item {
+                val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = asymmetricCardShape,
+                    colors = CardDefaults.cardColors(
+                        containerColor = when (creationState) {
+                            is FbCreationState.Success -> MintFresh.copy(alpha = 0.1f)
+                            is FbCreationState.Error -> Color.Red.copy(alpha = 0.05f)
+                            else -> MaterialTheme.colorScheme.surface
+                        }
+                    ),
+                    border = BorderStroke(
+                        width = 1.5.dp,
+                        color = when (creationState) {
+                            is FbCreationState.Success -> MintFresh
+                            is FbCreationState.Error -> Color.Red
+                            else -> RoseGold
+                        }
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Creation Progress Status",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = when (creationState) {
+                                    is FbCreationState.Success -> MintFresh
+                                    is FbCreationState.Error -> Color.Red
+                                    else -> RoseGold
+                                }
+                            )
+                            if (creationState is FbCreationState.Success || creationState is FbCreationState.Error) {
+                                IconButton(
+                                    onClick = { viewModel.clearFbCreationState() },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(Icons.Default.Close, contentDescription = "Close", modifier = Modifier.size(16.dp))
+                                }
+                            }
+                        }
+
+                        when (val state = creationState) {
+                            is FbCreationState.Purchasing -> {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = RoseGold)
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = "Purchasing virtual number from range: ${state.range}...",
+                                        fontSize = 13.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                            is FbCreationState.Registering -> {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = RoseGold)
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = "Obtained number: +${state.phone}.\nRegistering Facebook account now...",
+                                        fontSize = 13.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                            is FbCreationState.Success -> {
+                                Text(
+                                    text = "🎉 Facebook Account Created Successfully!",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    color = MintFresh
+                                )
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text(text = "Name: ${state.name}", fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                                    Text(text = "Phone: +${state.phone}", fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                                    Text(text = "UID: ${state.uid}", fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                                }
+                                Button(
+                                    onClick = {
+                                        clipboardManager.setText(AnnotatedString(state.cookies))
+                                        android.widget.Toast.makeText(context, "Cookies Copied!", android.widget.Toast.LENGTH_SHORT).show()
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = MintFresh),
+                                    modifier = Modifier.fillMaxWidth().height(36.dp)
+                                ) {
+                                    Text("Copy Account Cookies", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                            is FbCreationState.Error -> {
+                                Text(
+                                    text = "❌ Account Creation Failed",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = Color.Red
+                                )
+                                Text(
+                                    text = state.message,
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                )
+                            }
+                            else -> {}
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. Active FB SMS OTP/Verification section (Show OTP right here!)
         if (fbActiveNumbers.isNotEmpty()) {
             item {
                 Text(
@@ -2230,233 +2497,6 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
                             }
                         }
                     }
-                }
-            }
-        }
-
-        // Action Status Banner (if any)
-        if (creationState !is FbCreationState.Idle) {
-            item {
-                val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = asymmetricCardShape,
-                    colors = CardDefaults.cardColors(
-                        containerColor = when (creationState) {
-                            is FbCreationState.Success -> MintFresh.copy(alpha = 0.1f)
-                            is FbCreationState.Error -> Color.Red.copy(alpha = 0.05f)
-                            else -> MaterialTheme.colorScheme.surface
-                        }
-                    ),
-                    border = BorderStroke(
-                        width = 1.5.dp,
-                        color = when (creationState) {
-                            is FbCreationState.Success -> MintFresh
-                            is FbCreationState.Error -> Color.Red
-                            else -> RoseGold
-                        }
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Creation Progress Status",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                color = when (creationState) {
-                                    is FbCreationState.Success -> MintFresh
-                                    is FbCreationState.Error -> Color.Red
-                                    else -> RoseGold
-                                }
-                            )
-                            if (creationState is FbCreationState.Success || creationState is FbCreationState.Error) {
-                                IconButton(
-                                    onClick = { viewModel.clearFbCreationState() },
-                                    modifier = Modifier.size(24.dp)
-                                ) {
-                                    Icon(Icons.Default.Close, contentDescription = "Close", modifier = Modifier.size(16.dp))
-                                }
-                            }
-                        }
-
-                        when (val state = creationState) {
-                            is FbCreationState.Purchasing -> {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = RoseGold)
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Text(
-                                        text = "Purchasing virtual number from range: ${state.range}...",
-                                        fontSize = 13.sp,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                            }
-                            is FbCreationState.Registering -> {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = RoseGold)
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Text(
-                                        text = "Obtained number: +${state.phone}.\nRegistering Facebook account now...",
-                                        fontSize = 13.sp,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                            }
-                            is FbCreationState.Success -> {
-                                Text(
-                                    text = "🎉 Facebook Account Created Successfully!",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp,
-                                    color = MintFresh
-                                )
-                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    Text(text = "Name: ${state.name}", fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                                    Text(text = "Phone: +${state.phone}", fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                                    Text(text = "UID: ${state.uid}", fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                                }
-                                Button(
-                                    onClick = {
-                                        clipboardManager.setText(AnnotatedString(state.cookies))
-                                        android.widget.Toast.makeText(context, "Cookies Copied!", android.widget.Toast.LENGTH_SHORT).show()
-                                    },
-                                    colors = ButtonDefaults.buttonColors(containerColor = MintFresh),
-                                    modifier = Modifier.fillMaxWidth().height(36.dp)
-                                ) {
-                                    Text("Copy Account Cookies", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                            is FbCreationState.Error -> {
-                                Text(
-                                    text = "❌ Account Creation Failed",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp,
-                                    color = Color.Red
-                                )
-                                Text(
-                                    text = state.message,
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                                )
-                            }
-                            else -> {}
-                        }
-                    }
-                }
-            }
-        }
-
-        // Creation Password Card (Only Password Input, No phone input anymore!)
-        item {
-            val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = asymmetricCardShape,
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "Account Password Settings",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = RoseGold
-                    )
-
-                    // Password Input field
-                    OutlinedTextField(
-                        value = passwordInput,
-                        onValueChange = { passwordInput = it },
-                        label = { Text("Registration Password") },
-                        placeholder = { Text("Enter account password") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("fb_password_input"),
-                        singleLine = true,
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Key,
-                                contentDescription = "Password",
-                                tint = RoseGold.copy(alpha = 0.8f),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = RoseGold,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-                        ),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Button(
-                            onClick = {
-                                if (passwordInput.length >= 6) {
-                                    savedPassword = passwordInput
-                                    android.widget.Toast.makeText(context, "Password saved successfully!", android.widget.Toast.LENGTH_SHORT).show()
-                                } else {
-                                    android.widget.Toast.makeText(context, "Password must be at least 6 characters", android.widget.Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = RoseGold),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.weight(1.2f)
-                        ) {
-                            Text("Save Password", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        }
-
-                        if (savedPassword.isNotEmpty()) {
-                            Card(
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFF2E7D32).copy(alpha = 0.15f)),
-                                border = BorderStroke(1.dp, Color(0xFF2E7D32)),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.CheckCircle,
-                                        contentDescription = "Saved",
-                                        tint = Color(0xFF2E7D32),
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                    Text(
-                                        text = "Saved: $savedPassword",
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF2E7D32),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    Text(
-                        text = "ℹ️ Note: Phone numbers will be automatically obtained from live Facebook ranges below. Anyone cannot manually input a number.",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
                 }
             }
         }
@@ -2592,53 +2632,7 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
                             }
                         }
 
-                        if (selectedFbRange != null) {
-                            HorizontalDivider(
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                                thickness = 1.dp,
-                                modifier = Modifier.padding(vertical = 12.dp)
-                            )
-                            
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Selected Range: $selectedFbRange",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = if (savedPassword.isNotEmpty()) "Ready with saved password" else "⚠️ Save a password first",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = if (savedPassword.isNotEmpty()) Color(0xFF2E7D32) else Color.Red
-                                    )
-                                }
-                                
-                                Button(
-                                    onClick = {
-                                        if (systemStatus == "ON" && selectedFbRange != null && savedPassword.isNotEmpty()) {
-                                            viewModel.buyAndCreateFacebookAccount(selectedFbRange!!, savedPassword)
-                                        }
-                                    },
-                                    enabled = systemStatus == "ON" &&
-                                              savedPassword.isNotEmpty() &&
-                                              (creationState !is FbCreationState.Purchasing && creationState !is FbCreationState.Registering),
-                                    colors = ButtonDefaults.buttonColors(containerColor = RoseGold),
-                                    shape = RoundedCornerShape(10.dp)
-                                ) {
-                                    Text(
-                                        text = "CREATE ACCOUNT",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 12.sp
-                                    )
-                                }
-                            }
-                        }
+
                     }
                 }
             }
