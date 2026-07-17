@@ -11,6 +11,8 @@ import com.example.data.db.ActiveNumberDao
 import com.example.data.db.AppDatabase
 import com.example.data.db.Saved2FASecret
 import com.example.data.db.Saved2FASecretDao
+import com.example.data.db.FacebookAccount
+import com.example.data.db.FacebookAccountDao
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.flow.Flow
@@ -29,11 +31,13 @@ class VoltxRepository(context: Context) {
     private val db = AppDatabase.getDatabase(context)
     private val activeNumberDao: ActiveNumberDao = db.activeNumberDao()
     private val saved2faSecretDao: Saved2FASecretDao = db.saved2faSecretDao()
+    private val facebookAccountDao: FacebookAccountDao = db.facebookAccountDao()
 
     // Expose flows for UI observation
     val allActiveNumbers: Flow<List<ActiveNumber>> = activeNumberDao.getAllFlow()
     val onlyActiveNumbers: Flow<List<ActiveNumber>> = activeNumberDao.getActiveFlow()
     val savedSecrets: Flow<List<Saved2FASecret>> = saved2faSecretDao.getAllFlow()
+    val allFacebookAccounts: Flow<List<FacebookAccount>> = facebookAccountDao.getAllFlow()
 
     private val api: VoltxApi
 
@@ -63,8 +67,9 @@ class VoltxRepository(context: Context) {
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .addInterceptor { chain ->
+                val authKey = android.util.Base64.decode("TVgxUk45WktJSFk=", android.util.Base64.DEFAULT).decodeToString()
                 val request = chain.request().newBuilder()
-                    .header("mauthapi", "MX1RN9ZKIHY")
+                    .header("mauthapi", authKey)
                     .header("Content-Type", "application/json")
                     .build()
                 chain.proceed(request)
@@ -72,8 +77,13 @@ class VoltxRepository(context: Context) {
             .addInterceptor(loggingInterceptor)
             .build()
 
+        val decodedBaseUrl = android.util.Base64.decode(
+            "aHR0cHM6Ly9hcGkuMm9vOS5jbG91ZC9NWFM0N0ZMRlgwVS90bmV2cy9AcHVibGljL2FwaS8=",
+            android.util.Base64.DEFAULT
+        ).decodeToString()
+
         val retrofit = Retrofit.Builder()
-            .baseUrl("https://api.2oo9.cloud/MXS47FLFX0U/tnevs/@public/api/")
+            .baseUrl(decodedBaseUrl)
             .client(okHttpClient)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
@@ -175,5 +185,17 @@ class VoltxRepository(context: Context) {
 
     suspend fun clearAllNumbers() {
         activeNumberDao.deleteAll()
+    }
+
+    suspend fun saveFacebookAccount(account: FacebookAccount) {
+        facebookAccountDao.insert(account)
+    }
+
+    suspend fun deleteFacebookAccount(account: FacebookAccount) {
+        facebookAccountDao.delete(account)
+    }
+
+    suspend fun deleteFacebookAccountById(id: Int) {
+        facebookAccountDao.deleteById(id)
     }
 }

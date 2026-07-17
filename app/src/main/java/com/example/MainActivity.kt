@@ -92,6 +92,9 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -105,7 +108,13 @@ import com.example.data.api.LiveService
 import com.example.data.db.ActiveNumber
 import com.example.data.db.Saved2FASecret
 import com.example.ui.ServicesUiState
+import com.example.ui.FbCreationState
 import com.example.ui.VoltxViewModel
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Refresh
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.RoseGold
 import com.example.ui.theme.VioletWine
@@ -195,6 +204,17 @@ fun MainAppScreen() {
                         indicatorColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
                     )
                 )
+                NavigationBarItem(
+                    selected = currentTab == 3,
+                    onClick = { currentTab = 3 },
+                    icon = { Icon(Icons.Default.PersonAdd, contentDescription = "FB Creator") },
+                    label = { Text("FB Creator") },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = AmberGlow,
+                        selectedTextColor = AmberGlow,
+                        indicatorColor = AmberGlow.copy(alpha = 0.15f)
+                    )
+                )
             }
         },
         contentWindowInsets = WindowInsets.navigationBars
@@ -211,6 +231,7 @@ fun MainAppScreen() {
                 0 -> GetNumberTab(viewModel)
                 1 -> InboxTab(viewModel)
                 2 -> TwoFactorTab(viewModel)
+                3 -> FbCreatorTab(viewModel)
             }
         }
     }
@@ -1970,4 +1991,765 @@ fun getCountryInfo(rangeCode: String): Pair<String, String> {
 // BorderStroke helper
 fun BorderStroke(width: androidx.compose.ui.unit.Dp, color: Color): androidx.compose.foundation.BorderStroke {
     return androidx.compose.foundation.BorderStroke(width, color)
+}
+
+@Composable
+fun FbCreatorTab(viewModel: VoltxViewModel) {
+    val creationState by viewModel.facebookCreationState.collectAsState()
+    val creationMessage by viewModel.fbCreationMessage.collectAsState()
+    val facebookAccounts by viewModel.facebookAccounts.collectAsState()
+    val activeNumbers by viewModel.activeNumbers.collectAsState()
+    val hiddenFbActiveNumbers by viewModel.hiddenFbActiveNumbers.collectAsState()
+    val servicesState by viewModel.servicesState.collectAsState()
+    val systemStatus by viewModel.systemStatus.collectAsState()
+    val systemMessage by viewModel.systemMessage.collectAsState()
+    val clipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
+
+    var passwordInput by remember { mutableStateOf("") }
+    
+    // Auto-generate strong default password
+    LaunchedEffect(Unit) {
+        if (passwordInput.isBlank()) {
+            val chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+            passwordInput = "FB-" + (1..8).map { chars.random() }.joinToString("")
+        }
+    }
+
+    val fbActiveNumbers = remember(activeNumbers, hiddenFbActiveNumbers) {
+        activeNumbers.filter { 
+            it.service.lowercase().contains("facebook") && !hiddenFbActiveNumbers.contains(it.phone)
+        }
+    }
+
+    val fbService = remember(servicesState) {
+        if (servicesState is ServicesUiState.Success) {
+            (servicesState as ServicesUiState.Success).services.find { it.sid.lowercase().contains("facebook") }
+        } else {
+            null
+        }
+    }
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Space at top
+        item { Spacer(modifier = Modifier.height(8.dp)) }
+
+        // Header Title banner with beautiful gradient
+        item {
+            val asymmetricCardShape = RoundedCornerShape(topStart = 24.dp, bottomEnd = 24.dp, topEnd = 4.dp, bottomStart = 4.dp)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(asymmetricCardShape)
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(RoseGold, VioletWine, AmberGlow)
+                        )
+                    )
+                    .padding(20.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "✧ ARAFAT FB CREATOR ✧",
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 24.sp,
+                        letterSpacing = 2.sp,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Automated High-Success Facebook Account Registration Engine",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White.copy(alpha = 0.85f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+
+        // System ON/OFF Warning Card
+        if (systemStatus == "OFF") {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.Red.copy(alpha = 0.12f)),
+                    border = BorderStroke(1.5.dp, Color.Red),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(14.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "⚠️ AUTO CREATE SYSTEM IS OFF",
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 15.sp,
+                            color = Color.Red
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = systemMessage ?: "The auto account creation system is currently disabled by the administrator. Please check back later.",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+        }
+
+        // Active FB SMS OTP/Verification section (Show OTP right here!)
+        if (fbActiveNumbers.isNotEmpty()) {
+            item {
+                Text(
+                    text = "⚡ Active Verification Codes (Facebook)",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = AmberGlow
+                )
+            }
+            items(fbActiveNumbers) { number ->
+                val hasOtp = !number.otp.isNullOrBlank()
+                val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = asymmetricCardShape,
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (hasOtp) MintFresh.copy(alpha = 0.08f) else MaterialTheme.colorScheme.surface
+                    ),
+                    border = BorderStroke(
+                        width = 1.5.dp,
+                        color = if (hasOtp) MintFresh else AmberGlow.copy(alpha = 0.5f)
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .background(if (hasOtp) MintFresh else Color.Yellow, CircleShape)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "+${number.phone}",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            
+                            IconButton(
+                                onClick = { 
+                                    if (systemStatus == "ON") {
+                                        viewModel.hideActiveNumberFromFb(number.phone) 
+                                    }
+                                },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Remove Code",
+                                    tint = Color.Red.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        if (hasOtp) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MintFresh.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
+                                    .padding(12.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "OTP RECEIVED!",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = MintFresh
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = number.otp ?: "N/A",
+                                        fontSize = 26.sp,
+                                        fontWeight = FontWeight.Black,
+                                        letterSpacing = 4.sp,
+                                        color = MintFresh,
+                                        fontFamily = FontFamily.Monospace
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Button(
+                                        onClick = {
+                                            clipboardManager.setText(AnnotatedString(number.otp ?: ""))
+                                            android.widget.Toast.makeText(context, "OTP Copied!", android.widget.Toast.LENGTH_SHORT).show()
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = MintFresh),
+                                        modifier = Modifier.height(30.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+                                    ) {
+                                        Text("Copy OTP", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        } else {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 1.5.dp, color = AmberGlow)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Waiting for SMS OTP...",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                    fontStyle = FontStyle.Italic
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Action Status Banner (if any)
+        if (creationState !is FbCreationState.Idle) {
+            item {
+                val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = asymmetricCardShape,
+                    colors = CardDefaults.cardColors(
+                        containerColor = when (creationState) {
+                            is FbCreationState.Success -> MintFresh.copy(alpha = 0.1f)
+                            is FbCreationState.Error -> Color.Red.copy(alpha = 0.05f)
+                            else -> MaterialTheme.colorScheme.surface
+                        }
+                    ),
+                    border = BorderStroke(
+                        width = 1.5.dp,
+                        color = when (creationState) {
+                            is FbCreationState.Success -> MintFresh
+                            is FbCreationState.Error -> Color.Red
+                            else -> RoseGold
+                        }
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Creation Progress Status",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = when (creationState) {
+                                    is FbCreationState.Success -> MintFresh
+                                    is FbCreationState.Error -> Color.Red
+                                    else -> RoseGold
+                                }
+                            )
+                            if (creationState is FbCreationState.Success || creationState is FbCreationState.Error) {
+                                IconButton(
+                                    onClick = { viewModel.clearFbCreationState() },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(Icons.Default.Close, contentDescription = "Close", modifier = Modifier.size(16.dp))
+                                }
+                            }
+                        }
+
+                        when (val state = creationState) {
+                            is FbCreationState.Purchasing -> {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = RoseGold)
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = "Purchasing virtual number from range: ${state.range}...",
+                                        fontSize = 13.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                            is FbCreationState.Registering -> {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = RoseGold)
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = "Obtained number: +${state.phone}.\nRegistering Facebook account now...",
+                                        fontSize = 13.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                            is FbCreationState.Success -> {
+                                Text(
+                                    text = "🎉 Facebook Account Created Successfully!",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    color = MintFresh
+                                )
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text(text = "Name: ${state.name}", fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                                    Text(text = "Phone: +${state.phone}", fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                                    Text(text = "UID: ${state.uid}", fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                                }
+                                Button(
+                                    onClick = {
+                                        clipboardManager.setText(AnnotatedString(state.cookies))
+                                        android.widget.Toast.makeText(context, "Cookies Copied!", android.widget.Toast.LENGTH_SHORT).show()
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = MintFresh),
+                                    modifier = Modifier.fillMaxWidth().height(36.dp)
+                                ) {
+                                    Text("Copy Account Cookies", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                            is FbCreationState.Error -> {
+                                Text(
+                                    text = "❌ Account Creation Failed",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = Color.Red
+                                )
+                                Text(
+                                    text = state.message,
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                )
+                            }
+                            else -> {}
+                        }
+                    }
+                }
+            }
+        }
+
+        // Creation Password Card (Only Password Input, No phone input anymore!)
+        item {
+            val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = asymmetricCardShape,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Account Password Settings",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = RoseGold
+                    )
+
+                    // Password Input field
+                    OutlinedTextField(
+                        value = passwordInput,
+                        onValueChange = { passwordInput = it },
+                        label = { Text("Registration Password") },
+                        placeholder = { Text("Enter account password") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("fb_password_input"),
+                        singleLine = true,
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Key,
+                                contentDescription = "Password",
+                                tint = RoseGold.copy(alpha = 0.8f),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = RoseGold,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                        ),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+
+                    Text(
+                        text = "ℹ️ Note: Phone numbers will be automatically obtained from live Facebook ranges below. Anyone cannot manually input a number.",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
+            }
+        }
+
+        // Facebook Live Ranges Selection Grid Card (Tapping will fetch & create account)
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "👇 Select Facebook Live Range (Tap to Auto-Create)",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(
+                    onClick = { 
+                        if (systemStatus == "ON") {
+                            viewModel.fetchServices() 
+                        }
+                    },
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Reload Live Ranges",
+                        tint = RoseGold,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+
+        if (fbService == null || fbService.ranges.isNullOrEmpty()) {
+            item {
+                val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = asymmetricCardShape,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = RoseGold)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = "Loading Facebook Live Ranges...",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
+            val ranges = fbService.ranges ?: emptyList()
+            item {
+                val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = asymmetricCardShape,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Text(
+                            text = "Available Facebook Live Ranges",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            color = RoseGold,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                        
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            ranges.chunked(2).forEach { chunk ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    chunk.forEach { r ->
+                                        val countryInfo = getCountryInfo(r)
+                                        val isCurrentlySelected = creationState is FbCreationState.Purchasing && (creationState as FbCreationState.Purchasing).range == r
+                                        
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(
+                                                    if (isCurrentlySelected) RoseGold.copy(alpha = 0.15f)
+                                                    else MaterialTheme.colorScheme.background
+                                                )
+                                                .border(
+                                                    width = if (isCurrentlySelected) 1.5.dp else 1.dp,
+                                                    color = if (isCurrentlySelected) RoseGold else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                                                    shape = RoundedCornerShape(12.dp)
+                                                )
+                                                .clickable {
+                                                    if (systemStatus == "ON" && (creationState !is FbCreationState.Purchasing && creationState !is FbCreationState.Registering) && passwordInput.length >= 6) {
+                                                        viewModel.buyAndCreateFacebookAccount(r, passwordInput)
+                                                    }
+                                                }
+                                                .padding(12.dp)
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Text(text = countryInfo.first, fontSize = 20.sp)
+                                                Column {
+                                                    Text(
+                                                        text = r,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 13.sp,
+                                                        color = if (isCurrentlySelected) RoseGold else MaterialTheme.colorScheme.onSurface
+                                                    )
+                                                    Text(
+                                                        text = if (countryInfo.second.isNotEmpty()) countryInfo.second else "FB Live",
+                                                        fontSize = 9.sp,
+                                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (chunk.size < 2) {
+                                        Spacer(modifier = Modifier.weight(1f))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Created Accounts Header
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Created Accounts (${facebookAccounts.size})",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+
+        // Empty state or Accounts List
+        if (facebookAccounts.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "No FB Accounts Created Yet",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Accounts you register will appear here",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        )
+                    }
+                }
+            }
+        } else {
+            items(facebookAccounts) { account ->
+                val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = asymmetricCardShape,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                ServiceLogo(service = "facebook", modifier = Modifier.size(32.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        text = account.name,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    val formattedTime = remember(account.timestamp) {
+                                        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
+                                        sdf.format(java.util.Date(account.timestamp))
+                                    }
+                                    Text(
+                                        text = formattedTime,
+                                        fontSize = 10.sp,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                    )
+                                }
+                            }
+
+                            // Delete button
+                            IconButton(
+                                onClick = { viewModel.deleteFacebookAccount(account) },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete Account",
+                                    tint = RoseGold,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), thickness = 0.8.dp)
+
+                        // Info Fields (UID, Phone, Password, Cookies)
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            // UID Row
+                            AccountDetailRow(
+                                label = "UID",
+                                value = account.uid,
+                                onCopy = {
+                                    clipboardManager.setText(AnnotatedString(account.uid))
+                                    android.widget.Toast.makeText(context, "UID Copied", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            )
+
+                            // Phone Row
+                            AccountDetailRow(
+                                label = "Phone",
+                                value = account.phone,
+                                onCopy = {
+                                    clipboardManager.setText(AnnotatedString(account.phone))
+                                    android.widget.Toast.makeText(context, "Phone Copied", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            )
+
+                            // Password Row
+                            AccountDetailRow(
+                                label = "Password",
+                                value = account.password,
+                                onCopy = {
+                                    clipboardManager.setText(AnnotatedString(account.password))
+                                    android.widget.Toast.makeText(context, "Password Copied", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        }
+
+                        // Copy Cookies Button
+                        Button(
+                            onClick = {
+                                clipboardManager.setText(AnnotatedString(account.cookies))
+                                android.widget.Toast.makeText(context, "Cookies Copied", android.widget.Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(38.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = VioletWine.copy(alpha = 0.12f),
+                                contentColor = VioletWine
+                            ),
+                            border = BorderStroke(1.dp, VioletWine.copy(alpha = 0.3f)),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = "Copy Cookies",
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Copy Full Cookies String", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+
+        item { Spacer(modifier = Modifier.height(24.dp)) }
+    }
+}
+
+@Composable
+fun AccountDetailRow(label: String, value: String, onCopy: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = "$label: ",
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                modifier = Modifier.width(70.dp)
+            )
+            Text(
+                text = value,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        IconButton(
+            onClick = onCopy,
+            modifier = Modifier.size(24.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.ContentCopy,
+                contentDescription = "Copy $label",
+                tint = RoseGold.copy(alpha = 0.7f),
+                modifier = Modifier.size(14.dp)
+            )
+        }
+    }
 }
