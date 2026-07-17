@@ -2007,6 +2007,8 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
     val context = LocalContext.current
 
     var passwordInput by remember { mutableStateOf("") }
+    var savedPassword by remember { mutableStateOf("") }
+    var selectedFbRange by remember { mutableStateOf<String?>(null) }
     
     // Auto-generate strong default password
     LaunchedEffect(Unit) {
@@ -2397,6 +2399,58 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
                         shape = RoundedCornerShape(10.dp)
                     )
 
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Button(
+                            onClick = {
+                                if (passwordInput.length >= 6) {
+                                    savedPassword = passwordInput
+                                    android.widget.Toast.makeText(context, "Password saved successfully!", android.widget.Toast.LENGTH_SHORT).show()
+                                } else {
+                                    android.widget.Toast.makeText(context, "Password must be at least 6 characters", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = RoseGold),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1.2f)
+                        ) {
+                            Text("Save Password", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        if (savedPassword.isNotEmpty()) {
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFF2E7D32).copy(alpha = 0.15f)),
+                                border = BorderStroke(1.dp, Color(0xFF2E7D32)),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = "Saved",
+                                        tint = Color(0xFF2E7D32),
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Text(
+                                        text = "Saved: $savedPassword",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF2E7D32),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     Text(
                         text = "ℹ️ Note: Phone numbers will be automatically obtained from live Facebook ranges below. Anyone cannot manually input a number.",
                         fontSize = 11.sp,
@@ -2407,7 +2461,7 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
             }
         }
 
-        // Facebook Live Ranges Selection Grid Card (Tapping will fetch & create account)
+        // Facebook Live Ranges Selection Grid Card
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -2415,7 +2469,7 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "👇 Select Facebook Live Range (Tap to Auto-Create)",
+                    text = "👇 Select Facebook Live Range (Tap to Select)",
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -2488,7 +2542,7 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
                                 ) {
                                     chunk.forEach { r ->
                                         val countryInfo = getCountryInfo(r)
-                                        val isCurrentlySelected = creationState is FbCreationState.Purchasing && (creationState as FbCreationState.Purchasing).range == r
+                                        val isCurrentlySelected = selectedFbRange == r || (creationState is FbCreationState.Purchasing && (creationState as FbCreationState.Purchasing).range == r)
                                         
                                         Box(
                                             modifier = Modifier
@@ -2504,8 +2558,8 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
                                                     shape = RoundedCornerShape(12.dp)
                                                 )
                                                 .clickable {
-                                                    if (systemStatus == "ON" && (creationState !is FbCreationState.Purchasing && creationState !is FbCreationState.Registering) && passwordInput.length >= 6) {
-                                                        viewModel.buyAndCreateFacebookAccount(r, passwordInput)
+                                                    if (systemStatus == "ON") {
+                                                        selectedFbRange = r
                                                     }
                                                 }
                                                 .padding(12.dp)
@@ -2534,6 +2588,54 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
                                     if (chunk.size < 2) {
                                         Spacer(modifier = Modifier.weight(1f))
                                     }
+                                }
+                            }
+                        }
+
+                        if (selectedFbRange != null) {
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                                thickness = 1.dp,
+                                modifier = Modifier.padding(vertical = 12.dp)
+                            )
+                            
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Selected Range: $selectedFbRange",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = if (savedPassword.isNotEmpty()) "Ready with saved password" else "⚠️ Save a password first",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = if (savedPassword.isNotEmpty()) Color(0xFF2E7D32) else Color.Red
+                                    )
+                                }
+                                
+                                Button(
+                                    onClick = {
+                                        if (systemStatus == "ON" && selectedFbRange != null && savedPassword.isNotEmpty()) {
+                                            viewModel.buyAndCreateFacebookAccount(selectedFbRange!!, savedPassword)
+                                        }
+                                    },
+                                    enabled = systemStatus == "ON" &&
+                                              savedPassword.isNotEmpty() &&
+                                              (creationState !is FbCreationState.Purchasing && creationState !is FbCreationState.Registering),
+                                    colors = ButtonDefaults.buttonColors(containerColor = RoseGold),
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Text(
+                                        text = "CREATE ACCOUNT",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp
+                                    )
                                 }
                             }
                         }
@@ -2677,29 +2779,58 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
                             )
                         }
 
-                        // Copy Cookies Button
-                        Button(
-                            onClick = {
-                                clipboardManager.setText(AnnotatedString(account.cookies))
-                                android.widget.Toast.makeText(context, "Cookies Copied", android.widget.Toast.LENGTH_SHORT).show()
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(38.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = VioletWine.copy(alpha = 0.12f),
-                                contentColor = VioletWine
-                            ),
-                            border = BorderStroke(1.dp, VioletWine.copy(alpha = 0.3f)),
-                            shape = RoundedCornerShape(8.dp)
+                        // Copy Actions Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.ContentCopy,
-                                contentDescription = "Copy Cookies",
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Copy Full Cookies String", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Button(
+                                onClick = {
+                                    clipboardManager.setText(AnnotatedString("${account.uid}|${account.phone}"))
+                                    android.widget.Toast.makeText(context, "UID & Phone Copied", android.widget.Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(38.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = RoseGold.copy(alpha = 0.12f),
+                                    contentColor = RoseGold
+                                ),
+                                border = BorderStroke(1.dp, RoseGold.copy(alpha = 0.3f)),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ContentCopy,
+                                    contentDescription = "Copy UID & Number",
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Copy UID | Phone", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+
+                            Button(
+                                onClick = {
+                                    clipboardManager.setText(AnnotatedString(account.cookies))
+                                    android.widget.Toast.makeText(context, "Cookies Copied", android.widget.Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(38.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = VioletWine.copy(alpha = 0.12f),
+                                    contentColor = VioletWine
+                                ),
+                                border = BorderStroke(1.dp, VioletWine.copy(alpha = 0.3f)),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ContentCopy,
+                                    contentDescription = "Copy Cookies",
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Copy Cookies", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
