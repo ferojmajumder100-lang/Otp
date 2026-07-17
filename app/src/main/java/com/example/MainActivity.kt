@@ -259,23 +259,15 @@ fun GetNumberTab(viewModel: VoltxViewModel) {
         // Hero Brand Title
         item {
             Spacer(modifier = Modifier.height(16.dp))
-            val artisticShape = RoundedCornerShape(topStart = 32.dp, bottomEnd = 32.dp, topEnd = 8.dp, bottomStart = 8.dp)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(artisticShape)
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(RoseGold, VioletWine, AmberGlow)
-                        )
-                    )
-                    .padding(2.5.dp)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.5.dp, RoseGold),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(topStart = 30.dp, bottomEnd = 30.dp, topEnd = 6.dp, bottomStart = 6.dp))
-                        .background(MaterialTheme.colorScheme.surface)
                         .padding(vertical = 20.dp, horizontal = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -293,12 +285,11 @@ fun GetNumberTab(viewModel: VoltxViewModel) {
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center,
-                        letterSpacing = 0.5.sp
+                        lineHeight = 16.sp
                     )
                 }
             }
         }
-
         // Active notification overlays/alerts
         purchaseMessage?.let { msg ->
             item {
@@ -389,7 +380,6 @@ fun GetNumberTab(viewModel: VoltxViewModel) {
 
         // Beautiful Search Bar for Live Services
         item {
-            val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
@@ -424,7 +414,7 @@ fun GetNumberTab(viewModel: VoltxViewModel) {
                         }
                     }
                 },
-                shape = asymmetricCardShape,
+                shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = RoseGold,
                     unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
@@ -482,12 +472,12 @@ fun GetNumberTab(viewModel: VoltxViewModel) {
                 }
 
                 item {
-                    val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
+                    val cardShape = RoundedCornerShape(8.dp)
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(140.dp)
-                            .background(MaterialTheme.colorScheme.surface, asymmetricCardShape)
+                            .background(MaterialTheme.colorScheme.surface, cardShape)
                             .padding(8.dp)
                     ) {
                         if (filteredServices.isEmpty()) {
@@ -514,7 +504,7 @@ fun GetNumberTab(viewModel: VoltxViewModel) {
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .clip(asymmetricCardShape)
+                                            .clip(cardShape)
                                             .background(
                                                 if (isSelected) RoseGold.copy(alpha = 0.15f)
                                                 else MaterialTheme.colorScheme.background
@@ -522,7 +512,7 @@ fun GetNumberTab(viewModel: VoltxViewModel) {
                                             .border(
                                                 width = if (isSelected) 1.5.dp else 1.dp,
                                                 color = if (isSelected) RoseGold else Color.Transparent,
-                                                shape = asymmetricCardShape
+                                                shape = cardShape
                                             )
                                             .clickable { viewModel.selectService(service) }
                                             .padding(10.dp),
@@ -582,12 +572,12 @@ fun GetNumberTab(viewModel: VoltxViewModel) {
                 }
             } else {
                 item {
-                    val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
+                    val cardShape = RoundedCornerShape(8.dp)
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(180.dp)
-                            .background(MaterialTheme.colorScheme.surface, asymmetricCardShape)
+                            .background(MaterialTheme.colorScheme.surface, cardShape)
                             .padding(8.dp)
                     ) {
                         LazyVerticalGrid(
@@ -602,7 +592,7 @@ fun GetNumberTab(viewModel: VoltxViewModel) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clip(asymmetricCardShape)
+                                        .clip(cardShape)
                                         .background(
                                             if (isSelected) VioletWine.copy(alpha = 0.15f)
                                             else MaterialTheme.colorScheme.background
@@ -610,7 +600,7 @@ fun GetNumberTab(viewModel: VoltxViewModel) {
                                         .border(
                                             width = if (isSelected) 1.5.dp else 1.dp,
                                             color = if (isSelected) VioletWine else Color.Transparent,
-                                            shape = asymmetricCardShape
+                                            shape = cardShape
                                         )
                                         .clickable { viewModel.selectRange(r) }
                                         .padding(10.dp),
@@ -1255,7 +1245,6 @@ fun InboxTab(viewModel: VoltxViewModel) {
 fun ActiveNumberCard(number: ActiveNumber, viewModel: VoltxViewModel, context: Context) {
     val isOtpReceived = !number.otp.isNullOrBlank()
 
-    val artisticCardShape = RoundedCornerShape(topStart = 24.dp, bottomEnd = 24.dp, topEnd = 6.dp, bottomStart = 6.dp)
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -1265,7 +1254,7 @@ fun ActiveNumberCard(number: ActiveNumber, viewModel: VoltxViewModel, context: C
             width = 1.5.dp,
             color = if (isOtpReceived) MintFresh.copy(alpha = 0.6f) else RoseGold.copy(alpha = 0.4f)
         ),
-        shape = artisticCardShape
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Top Row: Service info and status
@@ -1499,13 +1488,12 @@ fun TwoFactorTab(viewModel: VoltxViewModel) {
 
         // Expandable input form to add tokens
         AnimatedVisibility(visible = isAdding) {
-            val inputCardShape = RoundedCornerShape(topStart = 24.dp, bottomEnd = 24.dp, topEnd = 6.dp, bottomStart = 6.dp)
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = inputCardShape,
+                shape = RoundedCornerShape(12.dp),
                 border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -1662,14 +1650,13 @@ fun TwoFactorTab(viewModel: VoltxViewModel) {
                         "${tokenCode.substring(0, 3)} ${tokenCode.substring(3)}"
                     } else tokenCode
 
-                    val tokenCardShape = RoundedCornerShape(topStart = 24.dp, bottomEnd = 24.dp, topEnd = 6.dp, bottomStart = 6.dp)
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("secret_token_card_${item.id}"),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
-                        shape = tokenCardShape
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Row(
                             modifier = Modifier
@@ -2029,22 +2016,18 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
         // Space at top
         item { Spacer(modifier = Modifier.height(8.dp)) }
 
-        // Header Title banner with beautiful gradient
+        // Header Title banner
         item {
-            val asymmetricCardShape = RoundedCornerShape(topStart = 24.dp, bottomEnd = 24.dp, topEnd = 4.dp, bottomStart = 4.dp)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(asymmetricCardShape)
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(RoseGold, VioletWine, AmberGlow)
-                        )
-                    )
-                    .padding(20.dp)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.5.dp, RoseGold),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 18.dp, horizontal = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
@@ -2052,14 +2035,14 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 24.sp,
                         letterSpacing = 2.sp,
-                        color = Color.White
+                        color = RoseGold
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Automated High-Success Facebook Account Registration Engine",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color.White.copy(alpha = 0.85f),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center
                     )
                 }
@@ -2100,10 +2083,9 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
 
         // 1. Account Password Settings & Primary Creation Controller (Sobar Upore!)
         item {
-            val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = asymmetricCardShape,
+                shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 border = BorderStroke(1.5.dp, RoseGold.copy(alpha = 0.3f))
             ) {
@@ -2262,10 +2244,9 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
         // 2. Action Status Banner (if any)
         if (creationState !is FbCreationState.Idle) {
             item {
-                val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = asymmetricCardShape,
+                    shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = when (creationState) {
                             is FbCreationState.Success -> MintFresh.copy(alpha = 0.1f)
@@ -2314,7 +2295,7 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
                         when (val state = creationState) {
                             is FbCreationState.Purchasing -> {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = RoseGold)
+                                    Text("⏳", fontSize = 18.sp)
                                     Spacer(modifier = Modifier.width(10.dp))
                                     Text(
                                         text = "Purchasing virtual number from range: ${state.range}...",
@@ -2325,7 +2306,7 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
                             }
                             is FbCreationState.Registering -> {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = RoseGold)
+                                    Text("⏳", fontSize = 18.sp)
                                     Spacer(modifier = Modifier.width(10.dp))
                                     Text(
                                         text = "Obtained number: +${state.phone}.\nRegistering Facebook account now...",
@@ -2389,10 +2370,9 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
             }
             items(fbActiveNumbers) { number ->
                 val hasOtp = !number.otp.isNullOrBlank()
-                val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = asymmetricCardShape,
+                    shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = if (hasOtp) MintFresh.copy(alpha = 0.08f) else MaterialTheme.colorScheme.surface
                     ),
@@ -2486,7 +2466,7 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
                             ) {
-                                CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 1.5.dp, color = AmberGlow)
+                                Text("⏳", fontSize = 14.sp)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = "Waiting for SMS OTP...",
@@ -2535,16 +2515,15 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
 
         if (fbService == null || fbService.ranges.isNullOrEmpty()) {
             item {
-                val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = asymmetricCardShape,
+                    shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = RoseGold)
+                            Text("🔄", fontSize = 24.sp)
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 text = "Loading Facebook Live Ranges...",
@@ -2558,10 +2537,9 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
         } else {
             val ranges = fbService.ranges ?: emptyList()
             item {
-                val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = asymmetricCardShape,
+                    shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
@@ -2681,10 +2659,9 @@ fun FbCreatorTab(viewModel: VoltxViewModel) {
             }
         } else {
             items(facebookAccounts) { account ->
-                val asymmetricCardShape = RoundedCornerShape(topStart = 16.dp, bottomEnd = 16.dp, topEnd = 4.dp, bottomStart = 4.dp)
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = asymmetricCardShape,
+                    shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
                 ) {
